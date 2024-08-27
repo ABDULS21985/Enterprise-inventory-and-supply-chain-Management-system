@@ -53,7 +53,6 @@ func main() {
 	api.HandleFunc("/api/orders/{id}", controllers.UpdateOrder).Methods("PUT")
 	api.HandleFunc("/api/orders/{id}", controllers.DeleteOrder).Methods("DELETE")
 
-
 	// Shipment routes
 	api.HandleFunc("/api/shipments", controllers.CreateShipment).Methods("POST")
 	api.HandleFunc("/api/shipments/{id}", controllers.GetShipment).Methods("GET")
@@ -72,7 +71,6 @@ func main() {
 		http.ServeFile(w, r, "static/index.html")
 	})
 
-
 	// Handle 404
 	r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/404.html")
@@ -83,31 +81,31 @@ func main() {
 		http.ServeFile(w, r, "static/405.html")
 	})
 
-	// Handle 500
+	// Middleware to handle 500 errors
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
-				if r := recover(); r != nil {
+				if rec := recover(); rec != nil {
 					http.ServeFile(w, r, "static/500.html")
 				}
-
 			}()
 			next.ServeHTTP(w, r)
 		})
 	})
 
-	// Handle 503
+	// Middleware to handle 503 errors
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
-				if r := recover(); r != nil {
+				if rec := recover(); rec != nil {
 					http.ServeFile(w, r, "static/503.html")
 				}
-
 			}()
+			next.ServeHTTP(w, r)
+		})
+	})
 
 	// Start the server
 	log.Println("Server is running on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
-	
 }
