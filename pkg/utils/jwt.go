@@ -23,7 +23,7 @@ func GenerateToken(userID uint, role string) (string, error) {
 		UserID: userID,
 		Role:   role,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(24 * time.Hour).Unix(),
+			ExpiresAt: time.Now().Add(24 * time.Hour).Unix(), // Token expiry set to 24 hours
 		},
 	}
 
@@ -36,6 +36,7 @@ func GenerateToken(userID uint, role string) (string, error) {
 func ValidateToken(tokenString string) (*JWTClaims, error) {
 	claims := &JWTClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		// Ensure the token method used for signing is HMAC
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("unexpected signing method")
 		}

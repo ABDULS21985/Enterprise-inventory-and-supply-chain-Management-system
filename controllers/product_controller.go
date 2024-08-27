@@ -349,3 +349,5 @@ func GetProductsByCategoryPriceRangeAndStockRangeHandler(w http.ResponseWriter, 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(products)
 }
+
+//Get

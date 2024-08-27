@@ -5,23 +5,13 @@ import (
 	"inventory-supply-chain-system/db"
 	"inventory-supply-chain-system/models"
 	"inventory-supply-chain-system/pkg/utils"
+	"log"
 	"net/http"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 // RegisterUser registers a new user
-// @Summary Register a new user
-// @Description Registers a new user in the system with a hashed password
-// @Tags auth
-// @Accept json
-// @Produce json
-// @Param user body models.User true "User data"
-// @Success 201 {object} models.User
-// @Failure 400 {string} string "Invalid input"
-// @Failure 409 {string} string "User with this email already exists"
-// @Failure 500 {string} string "Error hashing password" "Error saving user"
-// @Router /auth/register [post]
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)
@@ -45,11 +35,18 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	}
 	user.Password = string(hashedPassword)
 
+	// Format the permissions as a PostgreSQL array
+	// Make sure to set permissions correctly based on your struct setup
+	user.Permissions = []string{"view_reports", "approve_transactions", "manage_team"}
+
 	// Save the user to the database
 	if err := db.DB.Create(&user).Error; err != nil {
 		http.Error(w, "Error saving user", http.StatusInternalServerError)
 		return
 	}
+
+	// Debugging log: output the hashed password
+	log.Printf("User registered: %s, Hashed Password: %s", user.Email, user.Password)
 
 	// Return the created user (without the password)
 	user.Password = ""
@@ -58,18 +55,6 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // LoginUser authenticates the user and returns a JWT token
-// @Summary Login a user
-// @Description Authenticates a user and returns a JWT token
-// @Tags auth
-// @Accept json
-// @Produce json
-// @Param credentials body map[string]string true "User credentials"
-// @Success 200 {object} map[string]string "token"
-// @Failure 400 {string} string "Invalid input"
-// @Failure 404 {string} string "User not found"
-// @Failure 401 {string} string "Invalid password"
-// @Failure 500 {string} string "Error generating token"
-// @Router /auth/login [post]
 func LoginUser(w http.ResponseWriter, r *http.Request) {
 	var loginUser struct {
 		Email    string `json:"email"`
@@ -89,9 +74,13 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Debugging log: output the stored hashed password
+	log.Printf("Login attempt for: %s, Stored Hashed Password: %s", user.Email, user.Password)
+
 	// Compare the hashed password
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginUser.Password))
 	if err != nil {
+		log.Printf("Password comparison failed for: %s, Provided Password: %s", user.Email, loginUser.Password)
 		http.Error(w, "Invalid password", http.StatusUnauthorized)
 		return
 	}

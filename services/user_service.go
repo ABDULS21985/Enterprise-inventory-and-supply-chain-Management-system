@@ -9,16 +9,13 @@ import (
 
 // CreateUser creates a new user with a hashed password
 func CreateUser(user models.User) error {
-	// Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 	user.Password = string(hashedPassword)
 
-	// Save the user to the database
-	result := db.DB.Create(&user)
-	if result.Error != nil {
+	if result := db.DB.Create(&user); result.Error != nil {
 		return result.Error
 	}
 
@@ -28,8 +25,7 @@ func CreateUser(user models.User) error {
 // GetUser retrieves a user by ID
 func GetUser(id uint) (models.User, error) {
 	var user models.User
-	result := db.DB.First(&user, id)
-	if result.Error != nil {
+	if result := db.DB.First(&user, id); result.Error != nil {
 		return user, result.Error
 	}
 
@@ -39,8 +35,7 @@ func GetUser(id uint) (models.User, error) {
 // GetUserByEmail retrieves a user by email
 func GetUserByEmail(email string) (models.User, error) {
 	var user models.User
-	result := db.DB.Where("email = ?", email).First(&user)
-	if result.Error != nil {
+	if result := db.DB.Where("email = ?", email).First(&user); result.Error != nil {
 		return user, result.Error
 	}
 
@@ -49,8 +44,7 @@ func GetUserByEmail(email string) (models.User, error) {
 
 // UpdateUser updates a user's details
 func UpdateUser(user models.User) error {
-	result := db.DB.Save(&user)
-	if result.Error != nil {
+	if result := db.DB.Save(&user); result.Error != nil {
 		return result.Error
 	}
 
@@ -59,8 +53,7 @@ func UpdateUser(user models.User) error {
 
 // DeleteUser deletes a user by ID
 func DeleteUser(id uint) error {
-	result := db.DB.Delete(&models.User{}, id)
-	if result.Error != nil {
+	if result := db.DB.Delete(&models.User{}, id); result.Error != nil {
 		return result.Error
 	}
 
@@ -70,8 +63,7 @@ func DeleteUser(id uint) error {
 // ListUsers retrieves all users
 func ListUsers() ([]models.User, error) {
 	var users []models.User
-	result := db.DB.Find(&users)
-	if result.Error != nil {
+	if result := db.DB.Find(&users); result.Error != nil {
 		return users, result.Error
 	}
 
@@ -81,14 +73,11 @@ func ListUsers() ([]models.User, error) {
 // LoginUser verifies a user's credentials and logs them in
 func LoginUser(email, password string) (models.User, error) {
 	var user models.User
-	result := db.DB.Where("email = ?", email).First(&user)
-	if result.Error != nil {
+	if result := db.DB.Where("email = ?", email).First(&user); result.Error != nil {
 		return user, result.Error
 	}
 
-	// Compare the hashed password with the provided password
-	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-	if err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return user, err
 	}
 
@@ -98,20 +87,17 @@ func LoginUser(email, password string) (models.User, error) {
 // ChangePassword changes a user's password
 func ChangePassword(id uint, password string) error {
 	var user models.User
-	result := db.DB.First(&user, id)
-	if result.Error != nil {
+	if result := db.DB.First(&user, id); result.Error != nil {
 		return result.Error
 	}
 
-	// Hash the new password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 	user.Password = string(hashedPassword)
 
-	result = db.DB.Save(&user)
-	if result.Error != nil {
+	if result := db.DB.Save(&user); result.Error != nil {
 		return result.Error
 	}
 
@@ -121,20 +107,17 @@ func ChangePassword(id uint, password string) error {
 // ResetPassword resets a user's password by email
 func ResetPassword(email, password string) error {
 	var user models.User
-	result := db.DB.Where("email = ?", email).First(&user)
-	if result.Error != nil {
+	if result := db.DB.Where("email = ?", email).First(&user); result.Error != nil {
 		return result.Error
 	}
 
-	// Hash the new password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 	user.Password = string(hashedPassword)
 
-	result = db.DB.Save(&user)
-	if result.Error != nil {
+	if result := db.DB.Save(&user); result.Error != nil {
 		return result.Error
 	}
 
@@ -144,14 +127,12 @@ func ResetPassword(email, password string) error {
 // VerifyUser verifies a user's email
 func VerifyUser(email string) error {
 	var user models.User
-	result := db.DB.Where("email = ?", email).First(&user)
-	if result.Error != nil {
+	if result := db.DB.Where("email = ?", email).First(&user); result.Error != nil {
 		return result.Error
 	}
 
 	user.Verified = true
-	result = db.DB.Save(&user)
-	if result.Error != nil {
+	if result := db.DB.Save(&user); result.Error != nil {
 		return result.Error
 	}
 
@@ -161,14 +142,12 @@ func VerifyUser(email string) error {
 // UnverifyUser unverifies a user's email
 func UnverifyUser(email string) error {
 	var user models.User
-	result := db.DB.Where("email = ?", email).First(&user)
-	if result.Error != nil {
+	if result := db.DB.Where("email = ?", email).First(&user); result.Error != nil {
 		return result.Error
 	}
 
 	user.Verified = false
-	result = db.DB.Save(&user)
-	if result.Error != nil {
+	if result := db.DB.Save(&user); result.Error != nil {
 		return result.Error
 	}
 
@@ -178,14 +157,12 @@ func UnverifyUser(email string) error {
 // AddRole adds a role to a user
 func AddRole(id uint, role string) error {
 	var user models.User
-	result := db.DB.First(&user, id)
-	if result.Error != nil {
+	if result := db.DB.First(&user, id); result.Error != nil {
 		return result.Error
 	}
 
 	user.Role = role
-	result = db.DB.Save(&user)
-	if result.Error != nil {
+	if result := db.DB.Save(&user); result.Error != nil {
 		return result.Error
 	}
 
@@ -195,14 +172,12 @@ func AddRole(id uint, role string) error {
 // RemoveRole removes a role from a user
 func RemoveRole(id uint) error {
 	var user models.User
-	result := db.DB.First(&user, id)
-	if result.Error != nil {
+	if result := db.DB.First(&user, id); result.Error != nil {
 		return result.Error
 	}
 
 	user.Role = ""
-	result = db.DB.Save(&user)
-	if result.Error != nil {
+	if result := db.DB.Save(&user); result.Error != nil {
 		return result.Error
 	}
 
@@ -212,14 +187,12 @@ func RemoveRole(id uint) error {
 // AddPermission adds a permission to a user
 func AddPermission(id uint, permission string) error {
 	var user models.User
-	result := db.DB.First(&user, id)
-	if result.Error != nil {
+	if result := db.DB.First(&user, id); result.Error != nil {
 		return result.Error
 	}
 
 	user.Permissions = append(user.Permissions, permission)
-	result = db.DB.Save(&user)
-	if result.Error != nil {
+	if result := db.DB.Save(&user); result.Error != nil {
 		return result.Error
 	}
 
@@ -229,8 +202,7 @@ func AddPermission(id uint, permission string) error {
 // RemovePermission removes a permission from a user
 func RemovePermission(id uint, permission string) error {
 	var user models.User
-	result := db.DB.First(&user, id)
-	if result.Error != nil {
+	if result := db.DB.First(&user, id); result.Error != nil {
 		return result.Error
 	}
 
@@ -241,8 +213,7 @@ func RemovePermission(id uint, permission string) error {
 		}
 	}
 
-	result = db.DB.Save(&user)
-	if result.Error != nil {
+	if result := db.DB.Save(&user); result.Error != nil {
 		return result.Error
 	}
 
@@ -252,14 +223,12 @@ func RemovePermission(id uint, permission string) error {
 // AddAddress adds an address to a user
 func AddAddress(id uint, address models.Address) error {
 	var user models.User
-	result := db.DB.First(&user, id)
-	if result.Error != nil {
+	if result := db.DB.First(&user, id); result.Error != nil {
 		return result.Error
 	}
 
 	user.Addresses = append(user.Addresses, address)
-	result = db.DB.Save(&user)
-	if result.Error != nil {
+	if result := db.DB.Save(&user); result.Error != nil {
 		return result.Error
 	}
 
@@ -269,8 +238,7 @@ func AddAddress(id uint, address models.Address) error {
 // RemoveAddress removes an address from a user
 func RemoveAddress(id uint, address models.Address) error {
 	var user models.User
-	result := db.DB.First(&user, id)
-	if result.Error != nil {
+	if result := db.DB.First(&user, id); result.Error != nil {
 		return result.Error
 	}
 
@@ -281,8 +249,7 @@ func RemoveAddress(id uint, address models.Address) error {
 		}
 	}
 
-	result = db.DB.Save(&user)
-	if result.Error != nil {
+	if result := db.DB.Save(&user); result.Error != nil {
 		return result.Error
 	}
 
