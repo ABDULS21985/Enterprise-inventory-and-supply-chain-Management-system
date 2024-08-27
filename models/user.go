@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
@@ -15,14 +16,15 @@ type Address struct {
 }
 
 // User represents the user model
+
 type User struct {
 	gorm.Model
-	Name        string    `json:"name"`
-	Email       string    `json:"email" gorm:"unique"`
-	Password    string    `json:"-"`
-	Role        string    `json:"role"`
-	Verified    bool      `json:"verified"`
-	Permissions []string  `json:"permissions" gorm:"type:text[]"`
-	Addresses   []Address `json:"addresses" gorm:"foreignKey:UserID"`
-	Phone       string    `json:"phone"`
+	Name        string         `json:"name"`
+	Email       string         `json:"email" gorm:"unique"`
+	Password    string         `json:"-"`
+	Role        string         `json:"role"`
+	Verified    bool           `json:"verified"`
+	Permissions pq.StringArray `json:"permissions" gorm:"type:text[]"`
+	Phone       string         `json:"phone"`
+	Addresses   []Address      `json:"addresses"`
 }

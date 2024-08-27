@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -36,8 +37,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	user.Password = string(hashedPassword)
 
 	// Format the permissions as a PostgreSQL array
-	// Make sure to set permissions correctly based on your struct setup
-	user.Permissions = []string{"view_reports", "approve_transactions", "manage_team"}
+	user.Permissions = pq.StringArray([]string{"view_reports", "approve_transactions", "manage_team"})
 
 	// Save the user to the database
 	if err := db.DB.Create(&user).Error; err != nil {

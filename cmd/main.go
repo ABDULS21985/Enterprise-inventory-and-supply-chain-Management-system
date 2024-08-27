@@ -46,8 +46,9 @@ func main() {
 	r := mux.NewRouter()
 
 	// Public routes
-	r.HandleFunc("/api/auth/register", controllers.RegisterUser).Methods("POST")
-	r.HandleFunc("/api/auth/login", controllers.LoginUser).Methods("POST")
+	// r.HandleFunc("/api/auth/register", controllers.RegisterUser).Methods("POST")
+	r.HandleFunc("/api/users/login", controllers.LoginUser).Methods("POST")
+	r.HandleFunc("/api/users/register", controllers.RegisterUser).Methods("POST")
 
 	// Swagger route for API docs
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
@@ -65,6 +66,7 @@ func main() {
 	routes.RegisterInventoryRoutes(api)
 	routes.RegisterShipmentRoutes(api)
 	routes.RegisterVendorRoutes(api)
+	routes.RegisterUserRoutes(api)
 
 	// Serve static files
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
