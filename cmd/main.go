@@ -41,7 +41,73 @@ func main() {
 	api.Use(middlewares.AuthMiddleware)
 	api.HandleFunc("/api/users/me", controllers.GetProfileHandler).Methods("GET")
 
+	// Inventory routes
+	api.HandleFunc("/api/inventory", controllers.CreateInventory).Methods("POST")
+	api.HandleFunc("/api/inventory/{id}", controllers.GetInventory).Methods("GET")
+	api.HandleFunc("/api/inventory/{id}", controllers.UpdateInventory).Methods("PUT")
+	api.HandleFunc("/api/inventory/{id}", controllers.DeleteInventory).Methods("DELETE")
+
+	// Order routes
+	api.HandleFunc("/api/orders", controllers.CreateOrder).Methods("POST")
+	api.HandleFunc("/api/orders/{id}", controllers.GetOrder).Methods("GET")
+	api.HandleFunc("/api/orders/{id}", controllers.UpdateOrder).Methods("PUT")
+	api.HandleFunc("/api/orders/{id}", controllers.DeleteOrder).Methods("DELETE")
+
+
+	// Shipment routes
+	api.HandleFunc("/api/shipments", controllers.CreateShipment).Methods("POST")
+	api.HandleFunc("/api/shipments/{id}", controllers.GetShipment).Methods("GET")
+	api.HandleFunc("/api/shipments/{id}", controllers.UpdateShipment).Methods("PUT")
+	api.HandleFunc("/api/shipments/{id}", controllers.DeleteShipment).Methods("DELETE")
+
+	// Vendor routes
+	api.HandleFunc("/api/vendors", controllers.CreateVendor).Methods("POST")
+	api.HandleFunc("/api/vendors/{id}", controllers.GetVendor).Methods("GET")
+	api.HandleFunc("/api/vendors/{id}", controllers.UpdateVendor).Methods("PUT")
+	api.HandleFunc("/api/vendors/{id}", controllers.DeleteVendor).Methods("DELETE")
+
+	// Serve static files
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/index.html")
+	})
+
+
+	// Handle 404
+	r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/404.html")
+	})
+
+	// Handle 405
+	r.MethodNotAllowedHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/405.html")
+	})
+
+	// Handle 500
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			defer func() {
+				if r := recover(); r != nil {
+					http.ServeFile(w, r, "static/500.html")
+				}
+
+			}()
+			next.ServeHTTP(w, r)
+		})
+	})
+
+	// Handle 503
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			defer func() {
+				if r := recover(); r != nil {
+					http.ServeFile(w, r, "static/503.html")
+				}
+
+			}()
+
 	// Start the server
 	log.Println("Server is running on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
+	
 }
