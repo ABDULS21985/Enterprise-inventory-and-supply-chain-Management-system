@@ -2,8 +2,9 @@ basePath: /api
 host: localhost:8080
 info:
   contact: {}
-  description: This is a sample API for the Inventory Supply Chain System.
-  title: Inventory Supply Chain System API
+  description: These are APIs for the Enterprise Inventory and Supply Chain Management
+    System.
+  title: Enterprise Inventory and Supply Chain Management System API
   version: "1.0"
 paths: {}
 swagger: "2.0"

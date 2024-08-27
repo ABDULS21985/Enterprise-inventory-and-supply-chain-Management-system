@@ -1,8 +1,8 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "This is a sample API for the Inventory Supply Chain System.",
-        "title": "Inventory Supply Chain System API",
+        "description": "These are APIs for the Enterprise Inventory and Supply Chain Management System.",
+        "title": "Enterprise Inventory and Supply Chain Management System API",
         "contact": {},
         "version": "1.0"
     },
