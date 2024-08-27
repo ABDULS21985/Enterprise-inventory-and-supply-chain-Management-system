@@ -1,0 +1,9 @@
+basePath: /
+host: localhost:8080
+info:
+  contact: {}
+  description: This is an API for managing inventory and supply chains.
+  title: Inventory Supply Chain API
+  version: "1.0"
+paths: {}
+swagger: "2.0"
