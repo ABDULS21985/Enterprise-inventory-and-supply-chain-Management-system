@@ -64,3 +64,5 @@ func DeleteVendor(w http.ResponseWriter, r *http.Request) {
 	var vendor models.Vendor
 	db.DB.Delete(&vendor, id)
 }
+
+//

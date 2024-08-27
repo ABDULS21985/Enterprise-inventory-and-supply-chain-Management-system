@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -11,6 +14,7 @@ import (
 	"inventory-supply-chain-system/controllers"
 	"inventory-supply-chain-system/db"
 	"inventory-supply-chain-system/internal/middlewares"
+	"inventory-supply-chain-system/routes"
 )
 
 func main() {
@@ -39,31 +43,16 @@ func main() {
 	// Protected routes (Require authentication)
 	api := r.PathPrefix("/api").Subrouter()
 	api.Use(middlewares.AuthMiddleware)
-	api.HandleFunc("/api/users/me", controllers.GetProfileHandler).Methods("GET")
 
-	// Inventory routes
-	api.HandleFunc("/api/inventory", controllers.CreateInventory).Methods("POST")
-	api.HandleFunc("/api/inventory/{id}", controllers.GetInventory).Methods("GET")
-	api.HandleFunc("/api/inventory/{id}", controllers.UpdateInventory).Methods("PUT")
-	api.HandleFunc("/api/inventory/{id}", controllers.DeleteInventory).Methods("DELETE")
-
-	// Order routes
-	api.HandleFunc("/api/orders", controllers.CreateOrder).Methods("POST")
-	api.HandleFunc("/api/orders/{id}", controllers.GetOrder).Methods("GET")
-	api.HandleFunc("/api/orders/{id}", controllers.UpdateOrder).Methods("PUT")
-	api.HandleFunc("/api/orders/{id}", controllers.DeleteOrder).Methods("DELETE")
-
-	// Shipment routes
-	api.HandleFunc("/api/shipments", controllers.CreateShipment).Methods("POST")
-	api.HandleFunc("/api/shipments/{id}", controllers.GetShipment).Methods("GET")
-	api.HandleFunc("/api/shipments/{id}", controllers.UpdateShipment).Methods("PUT")
-	api.HandleFunc("/api/shipments/{id}", controllers.DeleteShipment).Methods("DELETE")
-
-	// Vendor routes
-	api.HandleFunc("/api/vendors", controllers.CreateVendor).Methods("POST")
-	api.HandleFunc("/api/vendors/{id}", controllers.GetVendor).Methods("GET")
-	api.HandleFunc("/api/vendors/{id}", controllers.UpdateVendor).Methods("PUT")
-	api.HandleFunc("/api/vendors/{id}", controllers.DeleteVendor).Methods("DELETE")
+	// Register protected routes
+	routes.RegisterItemRoutes(api)
+	routes.RegisterProductRoutes(api)
+	routes.RegisterProfileRoutes(api)
+	routes.RegisterSupplierRoutes(api)
+	routes.RegisterOrderRoutes(api)
+	routes.RegisterInventoryRoutes(api)
+	routes.RegisterShipmentRoutes(api)
+	routes.RegisterVendorRoutes(api)
 
 	// Serve static files
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
@@ -77,35 +66,53 @@ func main() {
 	})
 
 	// Handle 405
-	r.MethodNotAllowedHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	r.MethodNotAllowedHandler = http.HandlerFunc(func(w, r *http.Request) {
 		http.ServeFile(w, r, "static/405.html")
 	})
 
-	// Middleware to handle 500 errors
-	r.Use(func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			defer func() {
-				if rec := recover(); rec != nil {
-					http.ServeFile(w, r, "static/500.html")
-				}
-			}()
-			next.ServeHTTP(w, r)
-		})
-	})
+	// Middleware to handle 500 and 503 errors with logging
+	r.Use(recoverMiddleware)
 
-	// Middleware to handle 503 errors
-	r.Use(func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			defer func() {
-				if rec := recover(); rec != nil {
-					http.ServeFile(w, r, "static/503.html")
-				}
-			}()
-			next.ServeHTTP(w, r)
-		})
-	})
+	// Set up server with graceful shutdown
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: r,
+	}
 
-	// Start the server
-	log.Println("Server is running on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", r))
+	// Start the server in a goroutine
+	go func() {
+		log.Println("Server is running on port 8080")
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
+
+	// Wait for interrupt signal to gracefully shut down the server
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+
+	log.Println("Shutting down server...")
+
+	// The context is used to inform the server it has 5 seconds to finish the request it is handling
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatal("Server forced to shutdown:", err)
+	}
+
+	log.Println("Server exiting")
+}
+
+// recoverMiddleware handles panics and recovers with appropriate error pages.
+func recoverMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if rec := recover(); rec != nil {
+				log.Printf("Recovered from panic: %v", rec)
+				http.ServeFile(w, r, "static/500.html")
+			}
+		}()
+		next.ServeHTTP(w, r)
+	})
 }
