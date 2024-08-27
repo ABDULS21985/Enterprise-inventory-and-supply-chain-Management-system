@@ -1,4 +1,4 @@
-# Inventory Supply Chain System
+# Enterpris Inventory and Supply Chain Management System
 
 The Inventory Supply Chain System is a robust and scalable application designed to manage the entire lifecycle of products, orders, shipments, vendors, and inventory items within a supply chain. This system allows users to track products from suppliers to warehouses, monitor inventory levels, manage shipments, and analyze supply chain performance.
 
